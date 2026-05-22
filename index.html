@@ -15,6 +15,12 @@
         --accent: #7f7f6b;
       }
 
+      @font-face {
+        font-family: "Source Han Sans Cat";
+        src: url("./fonts/SourceHanSansCN-Light.otf") format("opentype");
+        font-display: swap;
+      }
+
       * {
         box-sizing: border-box;
       }
@@ -32,7 +38,7 @@
           radial-gradient(circle at 50% 32%, var(--bg-soft), transparent 42%),
           linear-gradient(180deg, var(--bg-soft), var(--bg));
         font-family:
-          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Source Han Sans Cat", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
           "Segoe UI", sans-serif;
         color: var(--text);
         transition: background 180ms ease;
@@ -82,6 +88,34 @@
         justify-content: center;
         gap: clamp(6px, 1.6vw, 8px);
         flex-wrap: wrap;
+      }
+
+      .profile-strip {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        max-width: min(78vw, 560px);
+        color: var(--text);
+        font-size: clamp(12px, 2.8vw, 14px);
+        line-height: 1.35;
+      }
+
+      .profile-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        min-height: 26px;
+        padding: 4px 9px;
+        border: 1px solid rgba(91, 84, 70, 0.12);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.4);
+        white-space: nowrap;
+      }
+
+      .profile-item strong {
+        font-weight: 700;
       }
 
       button.swatch {
@@ -276,6 +310,12 @@
           max-width: calc(100vw - 20px);
         }
 
+        .profile-strip {
+          order: -1;
+          width: 100%;
+          max-width: 100%;
+        }
+
         .readout {
           text-align: left;
           min-width: 0;
@@ -317,6 +357,7 @@
     <section class="toolbar" aria-label="controls">
       <div class="swatches" id="swatches" aria-label="background palette"></div>
       <input id="colorPicker" type="color" value="#eadfca" aria-label="custom background color" />
+      <div class="profile-strip" id="profileStrip" aria-live="polite"></div>
       <div class="readout" aria-live="polite">
         <strong id="label">center</strong>
         <span id="detail">frame_front.webp</span>
@@ -451,6 +492,7 @@
       const catName = document.querySelector("#catName");
       const catBirthday = document.querySelector("#catBirthday");
       const catPhone = document.querySelector("#catPhone");
+      const profileStrip = document.querySelector("#profileStrip");
       const qrUrl = document.querySelector("#qrUrl");
       const qrCode = document.querySelector("#qrCode");
       const atlasRows = [];
@@ -606,6 +648,7 @@
           catBirthday.value = "";
           catPhone.value = "";
         }
+        renderCatProfile();
       }
 
       function saveCatProfile() {
@@ -617,6 +660,42 @@
             phone: catPhone.value.trim(),
           }),
         );
+        renderCatProfile();
+      }
+
+      function formatBirthday(value) {
+        if (!value) {
+          return "";
+        }
+        const [year, month, day] = value.split("-");
+        return `${year}.${month}.${day}`;
+      }
+
+      function renderCatProfile() {
+        const items = [
+          ["姓名", catName.value.trim()],
+          ["生日", formatBirthday(catBirthday.value)],
+          ["电话", catPhone.value.trim()],
+        ].filter((item) => item[1]);
+
+        if (!items.length) {
+          profileStrip.innerHTML = '<span class="profile-item"><strong>卡门</strong><span>资料待填写</span></span>';
+          return;
+        }
+
+        profileStrip.innerHTML = items
+          .map(([key, value]) => `<span class="profile-item"><strong>${key}</strong><span>${escapeHtml(value)}</span></span>`)
+          .join("");
+      }
+
+      function escapeHtml(value) {
+        return value.replace(/[&<>"']/g, (char) => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        })[char]);
       }
 
       function renderQrCode() {
